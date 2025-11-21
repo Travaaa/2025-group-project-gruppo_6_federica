@@ -1,13 +1,66 @@
 html, body {
   margin: 0;
   padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
+#foto_sfondo_inizio {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('foto_sfondo_inizio.jpg'); /* Aggiungi la tua immagine nella cartella principale */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+  opacity: 1; /* Assicura che sia visibile dall'inizio */
+  filter: none; /* Nessun filtro all'inizio */
+  transition: filter 1s ease-in-out, opacity 1s ease-in-out;
+}
 
+#foto_sfondo_inizio.blurred {
+  filter: blur(8px);
+  opacity: 0.7;
+}
+
+#foto_sfondo_inizio.blurred::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(101, 67, 33, 0.4); /* Filtro marroncino trasparente */
+  pointer-events: none;
+}
+
+#text-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+#text-overlay.visible {
+  opacity: 1;
+}
+
+#text-overlay h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4.2rem;
+  color: #F4E9DA;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 400;
+}
 
 canvas {
   display: block;
