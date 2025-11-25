@@ -1,7 +1,7 @@
 // --- DATI E VARIABILI GLOBALI ---
 const NUM_SPECIE_INIZIALI = 172620; 
 let NUM_PALLINI_A_RISCHIO = 0; // Numero di pallini calcolato dinamicamente
-let RAGGIO_PALLINO = 4; // Raggio calcolato dinamicamente
+let RAGGIO_PALLINO = 3; // <<< QUESTO VALORE VIENE USATO SOLO PER DISEGNARE ORA!
 const NUM_SPECIE_FINALI = NUM_SPECIE_INIZIALI - 34208;
 
 // --- Dati per l'Animazione Graduale (7 secondi) ---
@@ -26,6 +26,7 @@ const frasi = [
     "Le specie viventi<br>conosciute nel mondo sono<br>2.140.000",
     // Separiamo il testo descrittivo dal numero per una centratura perfetta
     `<div class='content-block'><span id='descriptive-text'>Tra queste, finora è stato possibile<br>studiarne e catalogarne</span><div id='animated-number'>${NUM_SPECIE_INIZIALI.toLocaleString('it-IT')}</div></div>`,
+    "Placeholder per stato finale"
 ];
 
 let indiceFrase = 0;
@@ -56,19 +57,26 @@ function setup() {
     canvas.position(0, 0); 
     canvas.elt.style.display = 'none'; 
 
-    // Calcola il numero di pallini e il raggio in base all'area dello schermo
+    // --- LOGICA RIPRISTINATA PER CALCOLARE IL NUMERO CORRETTO DI PALLINI ---
+    
     const areaSchermo = windowWidth * windowHeight;
     const percentuale = 0.1983;
     const areaTotalePallini = areaSchermo * percentuale;
-    // Prima calcolo il numero di pallini come prima
-    const raggioBase = 4;
-    const areaSingoloBase = Math.PI * raggioBase * raggioBase;
+    
+    // 1. Definisce il RAGGIO DI BASE (ad es. 4) per calcolare quanti pallini ci vogliono
+    // Questo valore controlla la DENSITÀ dei pallini.
+    const raggioBaseDensita = 4; // <<< Valore di densità (quello che c'era all'inizio)
+    
+    const areaSingoloBase = Math.PI * raggioBaseDensita * raggioBaseDensita;
     const numBase = Math.floor(areaTotalePallini / areaSingoloBase);
-    // Ora dimezzo il numero di pallini
+    
+    // 2. Calcola il NUMERO FINALE di pallini (metà della densità di base)
     NUM_PALLINI_A_RISCHIO = Math.floor(numBase / 2);
-    // Calcolo il nuovo raggio per mantenere la stessa area totale
-    const areaSingoloNuovo = areaTotalePallini / NUM_PALLINI_A_RISCHIO;
-    RAGGIO_PALLINO = Math.sqrt(areaSingoloNuovo / Math.PI);
+    
+    // 3. Il RAGGIO DI DISEGNO (1.5) è già impostato in globale (RAGGIO_PALLINO) e viene 
+    //    usato nella classe SpeciesParticle. Non ricalcoliamo nulla qui.
+    
+    // --- FINE LOGICA CORRETTA ---
 }
 
 /**
@@ -113,12 +121,12 @@ function draw() {
 
         // Se l'animazione è terminata e tutti i pallini sono stati aggiunti
         if (animationComplete && specieMinacciateApparse.length === NUM_PALLINI_A_RISCHIO) {
-             // Aggiorna il numero finale nel DOM (la differenza esatta: 172620 - 34208)
-             const numSpan = h1Element.querySelector('#animated-number');
-             if (numSpan) {
-                 numSpan.innerHTML = (NUM_SPECIE_INIZIALI - 34208).toLocaleString('it-IT');
-             }
-             arrowNext.classList.add('visible'); // Riabilita la navigazione
+              // Aggiorna il numero finale nel DOM (la differenza esatta: 172620 - 34208)
+              const numSpan = h1Element.querySelector('#animated-number');
+              if (numSpan) {
+                  numSpan.innerHTML = (NUM_SPECIE_INIZIALI - 34208).toLocaleString('it-IT');
+              }
+              arrowNext.classList.add('visible'); // Riabilita la navigazione
         }
 
         // Aggiorna il testo del countdown nel DOM in tempo reale
@@ -317,9 +325,9 @@ window.addEventListener('load', function() {
         
         // Freccia 'next': visibile se non siamo all'ultima slide E non stiamo animando.
         if (indiceFrase === 0 || isPhraseTwoDisplayed || animationComplete) {
-             arrowNext.classList.add('visible');
+              arrowNext.classList.add('visible');
         } else {
-             arrowNext.classList.remove('visible');
+              arrowNext.classList.remove('visible');
         }
     }
     
@@ -359,27 +367,54 @@ window.addEventListener('load', function() {
                 tempoInizioAnimazione = millis(); 
                 isCountdownAnimating = true; // Avvia il loop 'draw()' in p5.js
                 isPhraseTwoDisplayed = false; // Lo stato di lettura è terminato
-            }, 2200 + 150); // 2.2s per la transizione, 150ms di buffer
-        }, 1500); // Prima attende la scomparsa della scritta
+            }, 2200 + 150); // 2.2s per la transizione
+        }, 1500); // Prima attendo la scomparsa della scritta
     }
-
-
-    // --- GESTIONE EVENTI CLICK ---
     
-    arrowNext.addEventListener('click', function() {
+arrowNext.addEventListener('click', function() {
         if (isCountdownAnimating) return; 
 
         if (indiceFrase === 0) { 
-            // Click 1: Passa da Frase 1 a Frase 2 (stato di lettura)
+            // Click 1: Vai alla schermata del numero
             updateContent(1); 
             
         } else if (indiceFrase === 1 && isPhraseTwoDisplayed) {
-            // Click 2: Avvia l'animazione (il numero si ingrandisce al centro)
+            // Click 2: Avvia animazione countdown
             startAnimationCountdown();
             
         } else if (indiceFrase === 1 && animationComplete) { 
-            // Click 3: Animazione completata. Passa alla prossima fase.
-            console.log("Animazione completata. Passaggio alla prossima slide.");
+            // Click 3: L'animazione è finita. 
+            
+            // 1. Trovo il blocco che contiene il numero
+            const contentBlock = h1Element.querySelector('.content-block');
+            const numberEl = h1Element.querySelector('#animated-number');
+
+            if (contentBlock && numberEl) {
+                // 2. Creo la nuova frase
+                const newSentence = document.createElement('div');
+                newSentence.innerHTML = "Se tutte le specie <br>a rischio di estinzione <br>scomparissero, ne rimarrebbero ";
+                newSentence.id = "extra-sentence"; 
+                
+                // 3. Stile per la nuova frase 
+                newSentence.style.fontSize = "50px"; 
+                newSentence.style.opacity = "0"; // Parte invisibile per fare dissolvenza
+                newSentence.style.transition = "opacity 1s ease";
+
+                // 4. Inserisco la frase PRIMA del numero
+                contentBlock.insertBefore(newSentence, numberEl);
+
+                // 5. Faccio apparire la frase dolcemente
+                setTimeout(() => {
+                    newSentence.style.opacity = "1";
+                }, 100);
+
+                // 6. Aggiorno manualmente l'indice per dire che siamo alla "fase 3"
+                indiceFrase = 2;
+                updateArrowsVisibility();
+            }
+
+        } else if (indiceFrase === 2) {
+            console.log("Fine presentazione");
         }
     });
     
@@ -387,7 +422,8 @@ window.addEventListener('load', function() {
         if (isCountdownAnimating) return; 
 
         if (indiceFrase > 0) { 
-            // Torna alla frase precedente (Frase 1)
+            // Se torno indietro dalla frase aggiunta (indice 2), 
+            // ricarico la fase 1 (che resetterà l'animazione, il che è corretto per un 'reset')
             updateContent(indiceFrase - 1);
         }
     });
